@@ -2,7 +2,7 @@ from dbms import DataBase
 
 
 class Rooms(DataBase):
-    def __init__(self, db_file, names):
+    def __init__(self, db_file, names=('Room 1', 'Room 2', 'Room 3', 'Room 4', 'Room 5')):
         DataBase.__init__(self, db_file)
         self.size = len(names)
         self.create_table('rooms', [('room_id', 'integer', 'PRIMARY KEY'),
@@ -12,15 +12,15 @@ class Rooms(DataBase):
             self.create_room(name)
 
     def create_room(self, name):
-        key = self.get_last_id('rooms') + 1
-        self.add_entry('rooms', (key, name))
+        new_room_id = self.get_new_id('rooms', 'room_id')
+        self.add_entry('rooms', (new_room_id, name))
 
 
 class Users(DataBase):
     def __init__(self, db_file, users=tuple()):
         DataBase.__init__(self, db_file)
         self.create_table('users', [('user_id', 'integer', 'PRIMARY KEY'),
-                                    ('full_name,', 'text', 'NOT NULL'),
+                                    ('full_name', 'text', 'NOT NULL'),
                                     ('email', 'text', 'NOT NULL'),
                                     ('phone_number', 'text', 'NOT NULL')])
 
@@ -28,18 +28,16 @@ class Users(DataBase):
             self.add_user(full_name, email, phone_number)
 
     def add_user(self, full_name, email, phone_number):
-        key = self.get_last_id('users') + 1
-        self.add_entry('users', (key, full_name, email, phone_number))
+        new_user_id = self.get_new_id('users', 'user_id')
+        self.add_entry('users', (new_user_id, full_name, email, phone_number))
 
 
 class Reservations(DataBase):
     def __init__(self, db_file):
         DataBase.__init__(self, db_file)
         columns = [('reservation_id', 'integer', 'PRIMARY KEY'),
-                   ('start_date', 'text', 'NOT NULL'),
-                   ('end_date', 'text', 'NOT NULL'),
-                   ('start_time', 'text', 'NOT NULL'),
-                   ('end_time', 'text', 'NOT NULL'),
+                   ('start_unixepoch', 'integer', 'NOT NULL'),
+                   ('end_unixepoch', 'integer', 'NOT NULL'),
                    ('room_id', 'integer', 'NOT NULL'),
                    ('user_id', 'integer', 'NOT NULL')]
 
@@ -49,5 +47,19 @@ class Reservations(DataBase):
         self.create_table('reservations', columns, foreign_keys=[rooms_foreign_key,
                                                                  users_foreign_key])
 
-    def make_reservation(self, start_date, end_date, start_time, end_time, room_id, user_id):
-        self.add_entry('reservations', (start_date, end_date, start_time, end_time, room_id, user_id))
+    def make_reservation(self, start_unixepoch, end_unixepoch, room_id, user_id):
+        new_key = self.get_new_id('reservations', 'reservation_id')
+
+        self.add_entry('reservations', (new_key, start_unixepoch, end_unixepoch, room_id, user_id))
+
+    def get_reservation(self, reservation_start, reservation_end, room_id):
+        cursor = self.connection.cursor()
+
+        sql_query = f"SELECT room_id, start_unixepoch, end_unixepoch\n" \
+                    f"FROM reservations\n" \
+                    f"WHERE room_id = {room_id}\n" \
+                    f"AND((start_unixepoch BETWEEN {reservation_start} and {reservation_end}) OR\n" \
+                    f"(end_unixepoch BETWEEN {reservation_start} and {reservation_end}));"
+
+        executed_cursor = cursor.execute(sql_query)
+        return executed_cursor.fetchone()[0]

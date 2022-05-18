@@ -64,12 +64,15 @@ class DataBase:
         if commit:
             self.connection.commit()
 
-    def get_last_id(self, table_name):
+    def get_new_id(self, table_name, col_name):
         cursor = self.connection.cursor()
-        sql = f"SELECT MAX(Id) FROM {table_name};"
-        max_id = cursor.execute(sql).fetchone()
+        get_new_key_sql = f"SELECT MAX({col_name}) FROM {table_name}"
+        new_key = cursor.execute(get_new_key_sql).fetchone()[0]
 
-        return max_id[0]
+        if new_key is None:
+            return 1
+        else:
+            return new_key + 1
 
     def add_entry(self, table_name, entry, commit=True):
         cursor = self.connection.cursor()
