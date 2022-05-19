@@ -34,7 +34,17 @@ class ReservationsManager:
                           "and if you would like to check availability for another room or make another"
                           " reservation, stay with us!")
             else:
-                print("Sorry, this room is unavailable in the given timeframe! You can register another room now, or"
+                reservations = self.reservations.get_reservations_in_timeframe(utime1, utime2, room_number)
+                res_string_format = []
+                for _, start_time, end_time, user_id in reservations:
+                    _, _, name, _ = self.users.get_entry_by_id("users", user_id)
+                    res_strng = f"{name} from {datetime.datetime.fromtimestamp(start_time)} till"
+                                f" {datetime.datetime.fromtimestamp(start_time)}"
+                    res_string_format.append(res_strng)
+
+
+                print("Sorry, this room is unavailable in the given timeframe!"
+                      f" It is taken by \n{',\n'.join(res_string_format)}.\n You can register another room now, or"
                       " if you are done press Ctrl+C on your keyboard!")
 
     def is_available(self, room_number, start_utime, end_utime):

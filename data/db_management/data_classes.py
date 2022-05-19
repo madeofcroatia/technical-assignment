@@ -79,3 +79,18 @@ class Reservations(DataBase):
         cursor.execute(sql_query)
         reservation = cursor.fetchone()
         return reservation
+
+    def get_reservations_in_timeframe(self, reservation_start, reservation_end, room_id):
+        cursor = self.connection.cursor()
+
+        sql_query = f"SELECT room_id, start_unixepoch, end_unixepoch, user_id\n" \
+                    f"FROM reservations\n" \
+                    f"WHERE room_id = {room_id}\n" \
+                    f"AND((start_unixepoch BETWEEN {reservation_start} and {reservation_end}) OR\n" \
+                    f"(end_unixepoch BETWEEN {reservation_start} and {reservation_end})) OR \n" \
+                    f"((start_unixepoch <= {reservation_start}) AND\n" \
+                    f"(end_unixepoch >= {reservation_end}));"
+
+        cursor.execute(sql_query)
+        reservations = cursor.fetchall()
+        return reservations
