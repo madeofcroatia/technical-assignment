@@ -72,7 +72,9 @@ class Reservations(DataBase):
                     f"FROM reservations\n" \
                     f"WHERE room_id = {room_id}\n" \
                     f"AND((start_unixepoch BETWEEN {reservation_start} and {reservation_end}) OR\n" \
-                    f"(end_unixepoch BETWEEN {reservation_start} and {reservation_end}));"
+                    f"(end_unixepoch BETWEEN {reservation_start} and {reservation_end})) OR \n" \
+                    f"((start_unixepoch <= {reservation_start} AND\n" \
+                    f"(end_unixepoch >= {reservation_end}));"
 
         cursor.execute(sql_query)
         reservation = cursor.fetchone()
