@@ -59,7 +59,7 @@ class DataBase:
         sql_contents = DataBase.sql_columns(columns)
         sql_refs = DataBase.sql_foreign_keys(foreign_keys) if len(foreign_keys) > 0 else ""
         sql_end = "\n);"
-        print(sql_start + sql_contents + sql_refs + sql_end)
+        # print(sql_start + sql_contents + sql_refs + sql_end)
         cursor.execute(sql_start + sql_contents + sql_refs + sql_end)
         if commit:
             self.connection.commit()
@@ -83,3 +83,11 @@ class DataBase:
         cursor.execute(insert_command)
         if commit:
             self.connection.commit()
+
+    def get_entry_by_id(self, table_name, id_column, entry_id):
+        cursor = self.connection.cursor()
+        cursor.execute(f"SELECT * FROM {table_name} WHERE {id_column} = {entry_id};")
+
+        entry = cursor.fetchone()
+
+        return entry

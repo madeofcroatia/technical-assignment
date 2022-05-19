@@ -1,4 +1,4 @@
-from dbms import DataBase
+from .dbms import DataBase
 
 
 class Rooms(DataBase):
@@ -8,12 +8,17 @@ class Rooms(DataBase):
         self.create_table('rooms', [('room_id', 'integer', 'PRIMARY KEY'),
                                     ('name', 'text', 'NOT NULL')])
 
-        for name in names:
-            self.create_room(name)
+        if self.get_new_id('rooms', 'room_id') == 1:
+            for name in names:
+                self.create_room(name)
 
     def create_room(self, name):
         new_room_id = self.get_new_id('rooms', 'room_id')
         self.add_entry('rooms', (new_room_id, name))
+
+    def get_room(self, room_id):
+        room = self.get_entry_by_id('rooms', 'room_id', room_id)
+        return room
 
 
 class Users(DataBase):
@@ -30,6 +35,14 @@ class Users(DataBase):
     def add_user(self, full_name, email, phone_number):
         new_user_id = self.get_new_id('users', 'user_id')
         self.add_entry('users', (new_user_id, full_name, email, phone_number))
+
+    def get_user(self, name):
+        cursor = self.connection.cursor()
+        sql_query = f"SELECT * FROM users WHERE full_name = '{name}';"
+        cursor.execute(sql_query)
+        user = cursor.fetchone()
+
+        return user
 
 
 class Reservations(DataBase):
@@ -52,7 +65,7 @@ class Reservations(DataBase):
 
         self.add_entry('reservations', (new_key, start_unixepoch, end_unixepoch, room_id, user_id))
 
-    def get_reservation(self, reservation_start, reservation_end, room_id):
+    def get_reservation_in_timeframe(self, reservation_start, reservation_end, room_id):
         cursor = self.connection.cursor()
 
         sql_query = f"SELECT room_id, start_unixepoch, end_unixepoch\n" \
@@ -61,5 +74,6 @@ class Reservations(DataBase):
                     f"AND((start_unixepoch BETWEEN {reservation_start} and {reservation_end}) OR\n" \
                     f"(end_unixepoch BETWEEN {reservation_start} and {reservation_end}));"
 
-        executed_cursor = cursor.execute(sql_query)
-        return executed_cursor.fetchone()[0]
+        cursor.execute(sql_query)
+        reservation = cursor.fetchone()
+        return reservation
