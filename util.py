@@ -5,15 +5,11 @@ import ssl
 
 
 def send_notification(host_email, host_password, receiver_email, notification):
-    port = 445
+    port = 465
     context = ssl.create_default_context()
-    print(context)
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
-        print(server)
         server.login(host_email, host_password)
-        print(1)
         server.sendmail(host_email, receiver_email, notification)
-        print(2)
 
 
 def to_timestamp(date, time):

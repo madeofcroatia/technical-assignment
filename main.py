@@ -19,16 +19,16 @@ class ReservationsManager:
             if self.is_available(room_number, utime1, utime2):
                 if self.input.yes_no_input() == 'y':
                     name, email_address, phone_number = self.input.registration_input()
+
                     if not checkers.existence.user_exists(self.users, name):
                         self.users.add_user(name, email_address, phone_number)
+
                     user_id = self.users.get_new_id('users', 'user_id') - 1
                     self.reservations.make_reservation(utime1, utime2, room_number, user_id)
+
                     print("Reservation was successful! Sending email confirmation...")
-                    message = f"Hi {name},\nYour reservation for room number {room_number} was successful!\n" \
-                              f"It starts on {datetime.datetime.fromtimestamp(utime1)} and lasts until " \
-                              f"{datetime.datetime.fromtimestamp(utime2)}!\n" \
-                              f"Best regards,\n" \
-                              f"Reservations Manager"
+
+                    message = ReservationsManager.format_notification(name, room_number, utime1, utime2)
                     send_notification(config.email, config.password, email_address, message)
                     print("Email confirmation was sent! If you are done, press Ctrl+C on your keyboard "
                           "and if you would like to check availability for another room or make another"
@@ -42,6 +42,15 @@ class ReservationsManager:
         # print(reservation)
         return reservation is None
 
+    @staticmethod
+    def format_notification(name, room_number, utime1, utime2):
+        subject = "Subject: Reservation Confirmation\n"
+        message = f"Hi {name},\n\nYour reservation for room number {room_number} was successful!\n\n" \
+                  f"It starts on {datetime.datetime.fromtimestamp(utime1)} and lasts until " \
+                  f"{datetime.datetime.fromtimestamp(utime2)}!\n\n" \
+                  f"Best regards,\n\n" \
+                  f"Reservations Manager"
+        return subject + message
 
 if __name__ == "__main__":
     ReservationsManager()
