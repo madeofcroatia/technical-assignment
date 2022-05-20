@@ -1,5 +1,7 @@
-import datetime
-from checkers import emsg, format, existence
+from datetime import datetime
+from checkers import format, existence
+from messages import emsg, responses
+
 import smtplib
 import ssl
 
@@ -15,11 +17,41 @@ def send_notification(host_email, host_password, receiver_email, notification):
 def to_timestamp(date, time):
     day, month, year = [int(i) for i in date.split('/')]
     hour, minute = [int(i) for i in time.split(':')]
-    dt = datetime.datetime(day=day, month=month, year=year, hour=hour, minute=minute)
+    dt = datetime(day=day, month=month, year=year, hour=hour, minute=minute)
 
-    unix_time = datetime.datetime.timestamp(dt)
+    unix_time = datetime.timestamp(dt)
 
     return unix_time
+
+
+def to_time(utime):
+    """
+    Convert the unix epoch time to datetime, and return the time
+    value in the DD/MM/YYYY format
+    """
+    dt = datetime.fromtimestamp(utime)
+    return dt.strftime("%H:%M")
+
+
+def to_date(utime):
+    """
+    Convert the unix epoch time to datetime, and return the date
+    value in the DD/MM/YYYY format
+    """
+    dt = datetime.fromtimestamp(utime)
+    return dt.strftime("%d/%m/%Y")
+
+
+def format_email(name, room_number, utime1, utime2):
+    """
+    Formats the email message to personalize it
+    """
+    time1, time2 = to_time(utime1), to_time(utime2)
+    date1, date2 = to_date(utime1), to_date(utime2)
+
+    message = responses.email_message.format(name, room_number,
+                                             date1, time1, date2, time2)
+    return message
 
 
 class InputHandler:
@@ -49,15 +81,17 @@ class InputHandler:
         return int(room), utime1, utime2
 
     @staticmethod
-    def registration_input():
-        name = InputHandler.format_only('user', 'Enter your full name: ')
-        email_address = InputHandler.format_only('email', 'Enter your email address: ')
-        phone = InputHandler.format_only('phone', 'Enter your phone number: ')
-        return name, email_address, phone
+    def email_input():
+        email = InputHandler.format_only('email', 'Enter your email please: ')
+        return email
 
     @staticmethod
-    def yes_no_input():
-        msg = "The room is available! Would you like to book it?(y/n) "
+    def name_input():
+        name = InputHandler.format_only('user', 'Enter your full name: ')
+        return name
+
+    @staticmethod
+    def yes_no_input(msg="The room is available! Would you like to book it?(y/n) "):
         while True:
             yes_no = input(msg)
             if yes_no in ('y', 'n'):
