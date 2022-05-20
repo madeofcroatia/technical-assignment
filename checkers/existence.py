@@ -6,8 +6,8 @@ def room_exists(rooms, room_id):
     return room is not None
 
 
-def user_exists(users, user_name):
-    user = users.get_user(user_name)
+def user_exists(users, user_email):
+    user = users.get_name(user_email)
     return user is not None
 
 
